@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import os
+import csv
+
+def readHeartRate():
+    file = 'HealthKit/HeartRate.csv'
+    datarows = []
+    with open(file, 'rb') as f:
+        reader = csvreader(f)
+        for row in reader:
+            datarows.append(row)
