@@ -9,6 +9,9 @@ import numpy as np
 from HealthKit import HealthKit
 from Moodmetric import Moodmetric
 from DexcomG4 import DexcomG4
+from Firstbeat import Firstbeat
+
+"""
 
 healthKitDir = 'HealthKit/'
 
@@ -60,14 +63,68 @@ for i in range(len(moodOutFiles)):
     Moodmetricparser.cleanDataOutfile(moodOutFiles[i], npmood[:,[0,i+1]])
 
 
+"""
 
+Firstbeatparser = Firstbeat()
+firstbeatDir = 'Firstbeat/raw/'
+firstbeatfiles = ['Mikael Rinnetmaki_20151110_065139_3501956.csv',
+                  'Mikael Rinnetmaki_20151111_053000_3501957.csv',
+                  'Mikael Rinnetmaki_20151112_073000_3501958.csv',
+                  'Mikael Rinnetmaki_20151113_070000_3501959.csv',
+                  'Mikael Rinnetmaki_20151114_091500_3501960.csv']
 
+#firstbeatfiles = ['testdata.csv', 'testdata2.csv']
 
+skipHeaders = False
+count = 0
+firstbeatdata = []
 
+#skipheaders = True
+for i in range(len(firstbeatfiles)):
+    if count > 0:
+        skipHeaders = True
+    firstbeatdata.extend(Firstbeatparser.parseDataFile(firstbeatDir + firstbeatfiles[i], skipHeaders))
+    count = count + 1
 
+print firstbeatdata[:3]
 
+#outfile = 'firstbeatOut.csv'    
+#Firstbeatparser.cleanDataOutfile(outfile, firstbeatdata)
+    
+print len(firstbeatdata)
 
+firstbeatCD = 'Firstbeat_CD/'
 
+firstbeatOutfiles = ['FB_StateVector',
+                     'FB_ArtifactCorrectedHRVector',
+                     'FB_METMaxPercentageVector',
+                     'FB_VO2Vector',
+                     'FB_EPOCVector',
+                     'FB_RespRVector',
+                     'FB_VentilationVector',
+                     'FB_EEVector',
+                     'FB_EEpFatVector',
+                     'FB_ResourceVector',
+                     'FB_AbsoluteStressVector',
+                     'FB_AbsoluteRelaxationVector',
+                     'FB_ScaledStressVector',
+                     'FB_ScaledRelaxationVector',
+                     'FB_VLFVector',
+                     'FB_LFVector',
+                     'FB_HFVector',
+                     'FB_HF2Vector',
+                     'FB_RSAAmplitudeVector',
+                     'FB_Splits',
+                     'FB_JournalMarkers']
+
+npfirstbeat = np.array(firstbeatdata)
+
+for i in range(len(firstbeatOutfiles)):
+    Firstbeatparser.cleanDataOutfile(firstbeatCD + firstbeatOutfiles[i], npfirstbeat[:,[1, i+2]])
+
+print Firstbeatparser.convertToUnixTime('13.11.2015-23:51:46')
+
+    
 
 #### below code is for visualisation with bokeh
 
