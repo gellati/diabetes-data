@@ -33,15 +33,3 @@ class Moodmetric(object):
         with open(outfile, 'w') as file:
             output = csv.writer(file, delimiter=",")
             output.writerows(data)
-        
-
-    
-
-
-    #            rowdata = patt.findall(r)
-#            rowdata = r.split(',')
-
-    #            rowdata = patt.findall(r)
-#            rowdata = re.split(r'\t+', r)
-#            rowdata = r.split('"\t+"') #('\t+\s+')
-            

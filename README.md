@@ -1,11 +1,14 @@
-I'm publishing this rich set of my personal health data to be used as a data source in the Ultrahack hackathon of the MyData2016 conference (http://mydata2016.org/ultrahack/).
 
-It would be awesome to see all this data visualized in fresh new ways.
+# Diabetes data analysis
 
-Even better, it would be super cool if someone could find any correlations from the data.
-* Does my electrodermal activity change when my blood glucose levels go up and down?
-* What's the effect of my level of activity on my heart-rate variability?
-* How should I adjust my insulin doses for the crowded and hectic conference, compared to everyday life?
+Data and software used for the analysis of [this](https://github.com/mrinnetmaki/mydata) diabetes data set.
 
-Feel free to play with it!
-# diabetes-data
+Data in their original folders, and cleaned up data in the CleanData folder. Each variable has its own file, and timestamps have been converted to Unix time.
+
+Visualisation programs in the visualisation folder. Both timeseries and networks visualised. Run the data.py program to see a popup of the network visualisation, and open the .html files in a browser. 
+
+Some documentation files in the docs folder.
+
+Programs written in Python, and dependencies listed in the requirements.txt (for those that have a __version__ attribute). Used also [netpython](https://github.com/CxAalto/netpython and [himmeli](https://github.com/CxAalto/himmeli_3.0.1) libraries. Cooperation with [bolozna](https://github.com/bolozna).
+
+Programs written for the [MyData hackathon](http://mydata2016.org/ultrhahack) 30.8-1.9.2016 

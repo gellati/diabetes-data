@@ -1,0 +1,100 @@
+import pandas
+import os
+import datetime
+import json
+import statsmodels.tsa.stattools
+import scipy.stats
+import networkx
+
+def unixtime_to_str(time):    
+        return datetime.datetime.fromtimestamp(float(time))
+
+
+class TimeSeriesData(object):
+    def __init__(self):
+        self.name="NA"
+        self.data=None
+
+    def read_koota_data(self,filename,column=0):
+        self.data = pandas.read_csv(filename,delimiter=',', parse_dates=True,date_parser=unixtime_to_str, index_col=column)
+        self.name = self.data.columns[column] 
+
+
+    def get_plotly_json(self):
+        data={}
+        data["type"]="scatter"
+        data["x"]=map(str,self.data.index)
+        data["y"]=map(str,self.data[self.data.columns[0]])
+        data["name"]=self.name
+        return json.dumps(data)
+
+    def resample(self,resolution):
+        tsd=TimeSeriesData()
+        tsd.name=self.name+"_"+resolution
+        tsd.data=self.data.resample(resolution).mean()
+
+    def compare(self,other,resolution="60s",maxlag=10):
+        #create the index
+        #pandas.date_range(max(min(self.data.index),min(other.data.index)),min(max(self.data.index),max(other.data.index)),freq=resolution)
+        
+        #resample
+        sdata=self.data.resample(resolution).mean().fillna(method='pad')
+        odata=other.data.resample(resolution).mean().fillna(method='pad')
+        mini=max(min(self.data.index),min(other.data.index))
+        maxi=min(max(self.data.index),max(other.data.index))
+        olist=list(odata[odata.columns[0]][mini:maxi])
+        slist=list(sdata[sdata.columns[0]][mini:maxi])
+
+        assert len(olist)==len(slist)
+        #print olist,slist
+        #return statsmodels.tsa.stattools.grangercausalitytests(zip(olist,slist),maxlag,verbose=False)
+        return scipy.stats.spearmanr(olist,slist)
+
+def parse_data_dir(dirname):
+    """Iterator for all data in a single directory.
+    """
+    for filename in os.listdir(dirname):
+        ds=TimeSeriesData()
+        ds.read_koota_data(os.path.join(dirname,filename))
+        yield ds
+
+def replace(infilename,outfilename,rdict):
+    infile=open(infilename,'r').read()
+    outfile=infile
+    for key,val in rdict.items():
+        outfile=outfile.replace(key,val)
+    of=open(outfilename,'w')
+    of.write(outfile)
+    of.close()
+
+def get_plotly_json(datastreams):
+    s="["
+    s+=",".join(map(lambda ds:ds.get_plotly_json(),datastreams))
+    s+="];"
+    return s
+
+dss=[]
+for ds in parse_data_dir("aware_processed/"):
+    dss.append(ds)
+
+replace("plot_template.html","plotly.html",{"%{data}":get_plotly_json(dss)})
+
+edges=[]
+g=networkx.Graph()
+for i,ds1 in enumerate(parse_data_dir("aware_processed/")):
+    g.add_node(ds1.name)
+    for j,ds2 in enumerate(parse_data_dir("aware_processed/")):
+        g.add_node(ds2.name)
+        if j!=i:
+            w=ds1.compare(ds2)
+            edges.append((ds1.name,ds2.name,w))
+            if w.pvalue>0.01:
+                g.add_edge(ds1.name,ds2.name,weight=w.correlation)
+            #print ds1.name,
+            #print ds2.name,
+            #print ds1.compare(ds2)
+
+print edges
+networkx.draw_networkx(g)
+from matplotlib import pyplot as plt
+plt.show()

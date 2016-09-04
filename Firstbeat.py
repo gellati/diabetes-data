@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, csv
+import os, csv, re
 from datetime import datetime, time
-import re
 
 epoch = datetime.utcfromtimestamp(0)
 
@@ -24,6 +23,7 @@ class Firstbeat(object):
         data = []
         sessionStartDate = ""
         dataStarts = False
+        timePattern = re.compile('24')
         for r in datarows:
 #            print r
             if not r:
@@ -41,15 +41,15 @@ class Firstbeat(object):
             if skipHeaders == True and r[0].startswith('CumulativeSecondVector'):
                 continue                
             if dataStarts == True:
-                rowdata = r
-                if rowdata[1] == '24:00:00':
+                if r[1] == '24:00:00':   # turn of the date at midnight
                     sessionStartDate = self.incrementDate(sessionStartDate)
-                if re.match(rowdata[1], '24'):
-                    rowdata[1].replace('24', '00', 1)
-                rowdata[1] = sessionStartDate + '-' + rowdata[1]
-
-#                rowdata[1] = self.convertToUnixTime(rowdata[1])
-                data.append(rowdata)
+                if timePattern.match(r[1]):
+                    r[1] = r[1].replace('24', '00', 1)
+#                    print r[1]
+                r[1] = sessionStartDate + '-' + r[1]
+                r[1] = self.convertToUnixTime(r[1])
+                    
+                data.append(r)
 
         return data
 
@@ -67,5 +67,3 @@ class Firstbeat(object):
         with open(outfile, 'w') as file:
             output = csv.writer(file, delimiter=",")
             output.writerows(data)
-
-

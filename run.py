@@ -93,29 +93,30 @@ print firstbeatdata[:3]
     
 print len(firstbeatdata)
 
-firstbeatCD = 'Firstbeat_CD/'
+#firstbeatCD = 'Firstbeat_CD/'
+firstbeatCD = 'CleanData/'
 
-firstbeatOutfiles = ['FB_StateVector',
-                     'FB_ArtifactCorrectedHRVector',
-                     'FB_METMaxPercentageVector',
-                     'FB_VO2Vector',
-                     'FB_EPOCVector',
-                     'FB_RespRVector',
-                     'FB_VentilationVector',
-                     'FB_EEVector',
-                     'FB_EEpFatVector',
-                     'FB_ResourceVector',
-                     'FB_AbsoluteStressVector',
-                     'FB_AbsoluteRelaxationVector',
-                     'FB_ScaledStressVector',
-                     'FB_ScaledRelaxationVector',
-                     'FB_VLFVector',
-                     'FB_LFVector',
-                     'FB_HFVector',
-                     'FB_HF2Vector',
-                     'FB_RSAAmplitudeVector',
-                     'FB_Splits',
-                     'FB_JournalMarkers']
+firstbeatOutfiles = ['Firstbeat_StateVector',
+                     'Firstbeat_ArtifactCorrectedHRVector',
+                     'Firstbeat_METMaxPercentageVector',
+                     'Firstbeat_VO2Vector',
+                     'Firstbeat_EPOCVector',
+                     'Firstbeat_RespRVector',
+                     'Firstbeat_VentilationVector',
+                     'Firstbeat_EEVector',
+                     'Firstbeat_EEpFatVector',
+                     'Firstbeat_ResourceVector',
+                     'Firstbeat_AbsoluteStressVector',
+                     'Firstbeat_AbsoluteRelaxationVector',
+                     'Firstbeat_ScaledStressVector',
+                     'Firstbeat_ScaledRelaxationVector',
+                     'Firstbeat_VLFVector',
+                     'Firstbeat_LFVector',
+                     'Firstbeat_HFVector',
+                     'Firstbeat_HF2Vector',
+                     'Firstbeat_RSAAmplitudeVector',
+                     'Firstbeat_Splits',
+                     'Firstbeat_JournalMarkers']
 
 npfirstbeat = np.array(firstbeatdata)
 
@@ -146,5 +147,3 @@ print Firstbeatparser.convertToUnixTime('13.11.2015-23:51:46')
 
 #p = TimeSeries(flightsvalues, x='time', legend=True, title='steps', ylabel='steps')
 #show(p)
-
-

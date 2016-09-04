@@ -1,0 +1,164 @@
+import pandas
+import os
+import datetime
+import json
+import statsmodels.tsa.stattools
+import scipy.stats
+import networkx
+
+def unixtime_to_str(time):    
+        return datetime.datetime.fromtimestamp(float(time))
+
+
+class TimeSeriesData(object):
+    def __init__(self):
+        self.name="NA"
+        self.data=None
+        self.data_column=0
+
+    def read_koota_data(self,filename,index_column=0,data_column=0):
+        self.data = pandas.read_csv(filename,delimiter=',', parse_dates=True,date_parser=unixtime_to_str, index_col=index_column)
+        self.name = self.data.columns[data_column] 
+        self.index_column=index_column
+        self.data_column=data_column
+
+    def get_plotly_json(self):
+        data={}
+        data["type"]="scatter"
+        data["x"]=map(str,self.data.index)
+        data["y"]=map(str,self.data[self.data.columns[self.data_column]])
+        data["name"]=self.name
+        return json.dumps(data)
+
+    def resample(self,resolution):
+        tsd=TimeSeriesData()
+        tsd.name=self.name+"_"+resolution
+        tsd.data=self.data.resample(resolution).mean()
+
+    def compare(self,other,resolution="600s",maxlag=10):
+        #create the index
+        #pandas.date_range(max(min(self.data.index),min(other.data.index)),min(max(self.data.index),max(other.data.index)),freq=resolution)
+        
+        #resample
+        sdata=self.data.resample(resolution).mean().fillna(method='pad')
+        odata=other.data.resample(resolution).mean().fillna(method='pad')
+        mini=max(min(self.data.index),min(other.data.index))
+        maxi=min(max(self.data.index),max(other.data.index))
+        olist=list(odata[odata.columns[other.data_column]][mini:maxi])
+        slist=list(sdata[sdata.columns[self.data_column]][mini:maxi])
+
+        assert len(olist)==len(slist)
+        #print olist,slist
+        #return statsmodels.tsa.stattools.grangercausalitytests(zip(olist,slist),maxlag,verbose=False)
+        return scipy.stats.spearmanr(olist,slist)
+
+def parse_data_dir(dirname):
+    """Iterator for all data in a single directory.
+    """
+    for filename in os.listdir(dirname):
+        ds=TimeSeriesData()
+        ds.read_koota_data(os.path.join(dirname,filename))
+        yield ds
+
+def replace(infilename,outfilename,rdict):
+    infile=open(infilename,'r').read()
+    outfile=infile
+    for key,val in rdict.items():
+        outfile=outfile.replace(key,val)
+    of=open(outfilename,'w')
+    of.write(outfile)
+    of.close()
+
+def get_plotly_json(datastreams):
+    s="["
+    s+=",".join(map(lambda ds:ds.get_plotly_json(),datastreams))
+    s+="];"
+    return s
+
+
+def get_aware():
+    dss=[]
+    for ds in parse_data_dir("aware_processed/"):
+        dss.append(ds)
+    return dss
+
+def get_diabetes():
+    dss=[]
+    dir="../CleanData/"
+    ds=TimeSeriesData(); ds.read_koota_data(dir+"Dexcom_cd.csv",data_column=0); dss.append(ds) 
+    ds=TimeSeriesData(); ds.read_koota_data(dir+"Moodmetric_c1_cd.csv",data_column=0); ds.name="Moodmetric c1"; dss.append(ds) 
+    ds=TimeSeriesData(); ds.read_koota_data(dir+"Moodmetric_c2_cd.csv",data_column=0); ds.name="Moodmetric c2"; dss.append(ds) 
+    ds=TimeSeriesData(); ds.read_koota_data(dir+"Moodmetric_c3_cd.csv",data_column=0); ds.name="Moodmetric c3"; dss.append(ds) 
+    ds=TimeSeriesData(); ds.read_koota_data(dir+"Moodmetric_c4_cd.csv",data_column=0); ds.name="Moodmetric c4"; dss.append(ds) 
+    ds=TimeSeriesData(); ds.read_koota_data(dir+"FlightsClimbed_cd.csv",data_column=1); dss.append(ds) 
+    ds=TimeSeriesData(); ds.read_koota_data(dir+"HeartRate_cd.csv",data_column=1); dss.append(ds) 
+    ds=TimeSeriesData(); ds.read_koota_data(dir+"Steps_cd.csv",data_column=1); dss.append(ds) 
+    return dss
+
+def visualize_cnet(g):
+    from netpython import *
+    nnet=pynet.SymmNet()
+    pnet=pynet.SymmNet()
+    anet=pynet.SymmNet()
+    for f,t,wd in g.edges(data=True):
+        w=wd["weight"]
+        if w>0:
+            pnet[f,t]=w
+            anet[f,t]=w
+        else:
+            nnet[f,t]=-w
+            anet[f,t]=-w
+
+    for node in g.nodes():
+        nnet.addNode(node)
+        anet.addNode(node)
+
+    c=visuals.Himmeli(anet).getCoordinates()
+
+    fig=visuals.visualizeNet(pnet,defaultEdgeColor="green",coords=c,defaultNodeSize=0)
+    visuals.visualizeNet(nnet,defaultEdgeColor="red",coords=c,axes=fig.axes[0],labelAllNodes=True,defaultNodeSize=5)
+
+    #fig=visuals.VisualizeNet(pnet,c)
+    #visuals.VisualizeNet(nnet,c,baseFig=fig)
+    fig.savefig("test.png")
+
+dss=get_diabetes()
+
+replace("plot_template.html","plotly.html",{"%{data}":get_plotly_json(dss)})
+
+js={}
+nodes=[]
+for ds in dss:
+    nodes.append({"id":ds.name})
+js["nodes"]=nodes
+
+edges=[]
+g=networkx.Graph()
+for i,ds1 in enumerate(dss):
+    g.add_node(ds1.name)
+    for j,ds2 in enumerate(dss):
+        g.add_node(ds2.name)
+        if j!=i:
+            w=ds1.compare(ds2)
+            if w.pvalue<0.01:
+                edges.append({"source":ds1.name,"target":ds2.name,"value":w.correlation})
+                g.add_edge(ds1.name,ds2.name,weight=w.correlation)
+            #print ds1.name,
+            #print ds2.name,
+            #print ds1.compare(ds2)
+
+#js["edges_spearman"]=edges
+js["links"]=edges
+
+jsfile=open("diabetes_spearman.json",'w')
+json.dump(js,jsfile)
+jsfile.close()
+
+visualize_cnet(g)
+
+
+
+#print edges
+#networkx.draw_networkx_edge_labels(g,c)
+from matplotlib import pyplot as plt
+plt.show()

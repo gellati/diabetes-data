@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
-import csv
+import os, csv
 
 from datetime import datetime, time
 

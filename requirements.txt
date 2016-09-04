@@ -1,0 +1,6 @@
+numpy==1.11.1
+pandas==0.18.1
+datetime
+statsmodels.tsa.stattools==0.6.1
+scipy==0.18.0
+networkx==1.11
