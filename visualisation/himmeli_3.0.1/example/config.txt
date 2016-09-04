@@ -1,0 +1,26 @@
+# Configuration file for Himmeli. To enable a feature, just remove the
+# precedecing '#'. Note that the most recent (i.e. greater line number)
+# instruction overrides previous settings.
+
+# Getting started.
+GraphName                myGraph
+EdgeFile                 edges.txt
+EdgeHeadVariable         HEAD
+EdgeTailVariable         TAIL
+EdgeWeightVariable       WEIGHT
+DecorationMode           on
+#FigureLimit              10
+
+# Customizing outlook.
+#EdgeWidthVariable        WIDTH
+#VertexFile               vertices.txt
+#VertexNameVariable       NAME
+#VertexShapeVariable      GROUP
+
+# Color and legend. 
+#ArrowMode                on
+#EdgeColorVariable        COLOR
+#EdgeColorInfo            incoming           900000
+#EdgeColorInfo            outgoing           000090
+#VertexShapeInfo          target             4
+#LegendMode               on

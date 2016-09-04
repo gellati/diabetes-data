@@ -1,0 +1,573 @@
+\documentclass[letterpaper, 12pt]{article}
+\usepackage[dvips]{graphicx}
+\usepackage[T1]{fontenc}
+\usepackage{times}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{inputenc}
+\usepackage{euscript}
+\usepackage{pstricks}
+\usepackage{pst-node}
+\usepackage{epsf}
+\usepackage{fancyhdr}
+
+\setlength{\parindent}{0mm}
+\addtolength{\textwidth}{3mm}
+\addtolength{\textheight}{12mm}
+\addtolength{\voffset}{-6mm}
+
+\newcommand{\EqRef}[1]{Equation \ref{#1}}
+\newcommand{\FigRef}[1]{Figure \ref{#1}}
+\newcommand{\TabRef}[1]{Table \ref{#1}}
+\newcommand{\Symbf}[1]{\mbox{\boldmath{$#1$}}}
+\newcommand{\Section}[1]{\section{#1} \vspace{-3.5mm}}
+\newcommand{\SubSection}[1]{\subsection*{#1} \vspace{-3mm}}
+\newcommand{\SubSubSection}[1]{\subsubsection*{#1} \vspace{-3mm}}
+
+% Custom page style.
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[RO]{
+  \begin{pspicture}(0, 0)(0, 0)
+    \rput[L]( 0.0,  6pt){\thepage}
+  \end{pspicture}
+}
+\fancyhead[LO]{\rightmark}
+\renewcommand{\sectionmark}[1]{\markright{}}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancypagestyle{plain} {\fancyhead{}}
+
+\title{Himmeli v3.0 user's guide}
+        \author{Ville-Petteri Mäkinen \\
+        \small Laboratory of Computational Engineering \\
+        \small Helsinki University of Technology}
+
+
+
+\begin{document}
+\maketitle
+\setlength{\parskip}{-2mm}
+\tableofcontents
+\setlength{\parskip}{3mm}
+
+\Section{Getting started}
+Automatic graph drawing is perhaps the most widely applicable visualization
+aid that the advent of computers has brought to the scientific community. For
+a researcher, a clear picture of a complicated set of relationships helps to
+identify interesting features or to understand the large-scale nature of the
+problem at hand. The program Himmeli was developed to meet this need or, more
+specifically, to produce two-dimensional representations of weighted,
+directed and non-planar graphs. It is based on a force-directed algorithm
+that is capable of making acceptable vertex layouts of almost every type of
+network.
+
+Himmeli has no graphical user interface\footnote{The installation of 
+Himmeli is similar to that of CraneFoot software, see CraneFoot user's
+guide for details.} but creates a PostScript file of the
+graph instead. You can either print the file directly or open it with a
+viewer software such as GhostView. In addition, it is possible to convert
+the EPS-file\footnote{encapsulated PostScript} to the portable document
+format (PDF); in most Linux platforms the command \texttt{ps2pdf} works well
+for the fixed paper sizes. Another useful tool is \texttt{eps2pdf} by Wouter
+Kager and many image processing software (e.g. Gimp) accept EPS, too. If you
+are planning on using Himmeli for online graph drawing, the ImageMagick
+graphics library can be used for conversions from EPS to other image formats.
+
+Himmeli requires two input files to work. The first, referred to as the
+\textit{configuration file}, contains the instructions that specify
+where to look for the graph data and how to visualize it. Furthermore, the
+name of the configuration file is the only command line argument that Himmeli
+accepts, everything else is defined by the instructions. \textbf{If you call
+Himmeli without any command line arguments, a concise listing of all features
+is printed on the screen.}
+
+\begin{figure}[ht]
+\begin{pspicture}(0, 0)(\textwidth, 9)
+  \rput[lb](2.0, -1.0){\scalebox{0.8}{\epsfbox{figure1.eps}}}
+  %\psframe(0, 0)(\textwidth, 9)
+\end{pspicture}
+\caption{An undecorated drawing of the largest component of a non-planar
+  random graph.}
+\label{fig1}
+\end{figure}
+
+The second file, referred to as the \textit{edge file}, contains the edges of
+the graph in tabulated ASCII text format. The first non-empty line of the file
+must contain the headings of the variable columns and the subsequent lines
+specify the graph topology. For each edge, you have to list at least the
+names of the endpoints on a single line in order for the edge to be registered
+by Himmeli. For instance, consider the first few rows and columns of the
+listing for the graph in Figure 1, written as
+
+\textit{edges.txt}: \\
+\small
+\verb|HEAD    TAIL    WEIGHT  ..| \\
+\verb|v0      v1      0.100| \\
+\verb|v0      v8      0.100| \\
+\verb|v0      v9      0.100| \\
+\verb|v0      v14     0.100| \\
+\verb|v0      v18     0.100| \\
+\verb|v0      v19     0.100| \\
+\verb|v1      v4      0.200| \\
+\verb|v1      v10     0.200| \\
+\verb|v1      v12     0.200| \\
+\verb|v2      v6      0.300| \\
+\verb|v2      v9      0.300| \\
+\verb|:|
+\normalsize
+
+Note that the columns are separated by horizontal tabulator characters that
+are not explicitly displayed here. If you wish to use another character, use
+the \texttt{Delimiter} instruction in your configuration file, details are at
+the end of this guide. The above alone is not enough, however, since without
+additional knowledge you cannot tell which column contains which variable.
+Hence the configuration file is needed to convey the necessary information to
+Himmeli. To produce \FigRef{fig1}, we need five instructions, formulated as
+
+\textit{config.txt}: \\
+\small
+\verb|GraphName                myGraph| \\
+\verb|EdgeFile                 edges.txt| \\
+\verb|EdgeHeadVariable         HEAD| \\
+\verb|EdgeTailVariable         TAIL| \\
+\verb|EdgeWeightVariable       WEIGHT .| \\
+\normalsize
+
+The first instruction \texttt{GraphName} sets the common part of output
+file names. Himmeli does not assume that the graph is connected, and it will
+print each component on a separate page (or file if so instructed, see
+\texttt{FigureLimit} for details). Largest components are printed first as
+can be witnessed in the output file \textit{myGraph.ps}. 
+The next line tells the name of the edge file, and the remaining two
+instructions indicate the way the relevant columns should be used by Himmeli.
+If you do not have the weights, simply omit the last instruction and Himmeli
+will assign a uniform weight to each edge. Note that it is not necessary to
+use the same column headings as in the example, you could use 'Source' and
+'Sink' instead of 'TAIL' and 'HEAD' or any other. In addition, you do not
+have to put the columns in any specific order. Finally, to ease the burden of
+data setup, Himmeli detects the names of the vertices automatically from
+the edge file so you do not have to provide any other information about the
+graph to produce a basic layout. 
+
+Figure \ref{fig1} could be improved, however, since at the moment the weights
+and directions of edges are not displayed. Also, it would be interesting to
+see the vertex strengths, that is, the sum of adjacent edge weights. You can
+tell Himmeli to decorate the drawing automatically by setting
+\texttt{DecorationMode} on in the configuration file. The colors, edge
+widths and vertex sizes are now determined by the weights and strengths
+(\FigRef{fig2}). The visual cues are normalized for each graph so they are
+not suitable for comparing networks that have different strength
+distributions. To make matters easier, you can influence the use of weights
+by transformations and filtering, more on that later.
+
+\begin{figure}[ht]
+\begin{pspicture}(0, 0)(\textwidth, 9)
+  \rput[lb](2.0, -1.0){\scalebox{0.8}{\epsfbox{figure2.eps}}}
+  \psframe(0, 0)(\textwidth, 9)
+\end{pspicture}
+\caption{A decorated version of the weighted component in \FigRef{fig1}.}
+\label{fig2}
+\end{figure}
+
+When looking \FigRef{fig2} closely, you will notice that the layout is not
+identical with \FigRef{fig1}. Graphs are high-dimensional objects so putting
+them on a 2D canvas is a brutal act. Furthermore, Himmeli's layout algorithm
+has a stochastic component that finds a minimum stress configuration -- but
+not necessarily the global minimum. Also, in this case the topology was
+slightly changed by automatic weight normalization.
+ 
+\Section{Customizing outlook}
+Although Himmeli can automatically color the graph, it is often necessary
+to display specific information that requires custom visualization. For this
+reason, you can set the color, width and label for each individual edge in the
+edge file. Suppose you are interested in vertices $v_{14}$ and $v_{16}$ and
+wish to display only those edges that are adjacent to them. This can be
+accomplished by adding an extra column\footnote{Himmeli also permits the use
+of auxiliary edge files, a topic that is discussed in a separate section.} in
+the edge file, written as
+
+\textit{edges.txt}: \\
+\small
+\verb|HEAD    TAIL    WEIGHT  WIDTH ..| \\
+\verb|:| \\
+\verb|v11     v17     1.2     -1| \\
+\verb|v11     v19     1.2     -1| \\
+\verb|v12     v14     1.3| \\
+\verb|v13     v18     1.4     -1| \\
+\verb|v13     v14     1.4| \\
+\verb|v16     v17     1.7| \\
+\verb|:|
+\normalsize
+
+Rather than explicitly setting the widths of the target edges, you can assign
+a negative width for the unwanted links instead. By doing this, Himmeli will
+still automatically decorate the unaffected edges, but skip the drawing of
+unwanted edges. It is important at this point to emphasize that the widths
+or any other visualization instructions have no effect on the vertex
+positioning algorithm, only the way the various objects are drawn will be
+altered.
+
+To distinguish the two vertices from the rest, you may wish to use a different
+node symbol or color. For that, it is necessary to use a third input file,
+referred to as the \textit{vertex file}. It has the same basic format as the
+edge file, that is, a header line of variable names followed by vertex
+records, each on a separate line. You need two columns: one for the vertex
+name and the other for the symbol code, formulated as
+
+\textit{vertices.txt}: \\
+\small
+\verb|NAME    GROUP| \\
+\verb|v14     4| \\
+\verb|v16     4| \\
+\verb|:|
+\normalsize
+
+The number 4 stands for the diamond shape, a complete list of shapes is
+depicted in \FigRef{fig5}. As before, you must use the configuration file to
+pass this extra information to Himmeli, listed as
+
+\textit{config.txt}: \\
+\small
+\verb|EdgeWidthVariable        WIDTH| \\
+\verb|VertexFile               vertices.txt| \\
+\verb|VertexNameVariable       NAME| \\
+\verb|VertexShapeVariable      GROUP .|
+\normalsize
+
+The parameter \texttt{VertexNameVariable} indicates the column that contains
+the names of the target vertices. Notice that the names in the edge file are
+not all listed in the vertex file. In fact, Himmeli will detect only
+those vertices already present in the edge file but, as seen here, you do not
+have to include them all. Another important point is that you do not
+have to fix the order of edges or vertices in the data files, Himmeli can
+sort them automatically. The result is depicted in \FigRef{fig3}.
+
+\begin{figure}[hb]
+\begin{pspicture}(0, 0)(\textwidth, 5.0)
+  \rput(7.0, 2.3){\scalebox{0.9}{\epsfbox{figure5.eps}}}
+\end{pspicture}
+\caption{Node shapes, patterns and some color definitions.}
+\label{fig5}
+\end{figure}
+
+\begin{figure}[ht]
+\begin{pspicture}(0, 0)(\textwidth, 8.5)
+  \rput[lb](2.0, -1.0){\scalebox{0.8}{\epsfbox{figure3.eps}}}
+  %\psframe(0, 0)(\textwidth, 8.5)
+\end{pspicture}
+\caption{A customized version of the component in \FigRef{fig1}.}
+\label{fig3}
+\end{figure}
+
+\Section{Color and legend}
+Suppose that next you want to display the incoming and outgoing edges with
+different colors for the two vertices $v_{14}$ and $v_{16}$. Again, you start
+by adding a column to the edge file and a corresponding instruction to the
+configuration file, written as
+
+\textit{edges.txt}: \\
+\small
+\verb|HEAD    TAIL    WEIGHT  WIDTH   COLOR| \\
+\verb|v11     v17     1.2     -1| \\
+\verb|v11     v19     1.2     -1| \\
+\verb|v12     v14     1.3             000090| \\
+\verb|v13     v18     1.4     -1| \\
+\verb|v13     v14     1.4             000090| \\
+\verb|v16     v17     1.7             900000| \\
+\normalsize
+\verb|:|
+
+and you can further emphasize the direction with an arrow head by enabling
+the \texttt{ArrowMode}. The human eye has three types of color receptors
+and for this reason colors can be defined as a combination of red,
+green and blue components. The values of the variable \texttt{COLOR} consist
+of three two digit blocks, each with the range from 00-99 indicating the
+strength of the primary color component. Here the aim was for a blue
+(000090) and red (900000). This is similar to the way colors are defined in
+HTML, for example, except that the decimal number system rather than the
+hexadecimal is used for clarity.
+
+When adding shapes and colors to the graph presentation it is important to
+have a legend that describes the meanings of the various symbols. Himmeli
+collects the visualization instructions from the configuration file and prints
+the results on the edge of each page, provided that \texttt{LegendMode} is on.
+Here it is instructive to add items that link the colors to edge directions
+and the diamond shape to the target vertices. To do this (and the previous
+enhancements), add the lines
+
+\textit{config.txt}: \\
+\small
+\verb|ArrowMode           on| \\
+\verb|LegendMode          on| \\
+\verb|EdgeColorVariable   COLOR| \\
+\verb|EdgeColorInfo       incoming   900000| \\
+\verb|EdgeColorInfo       outgoing   000090| \\
+\verb|VertexShapeInfo     target     4 |.
+\normalsize
+
+to the configuration file. The first value field of the ``info'' instructions
+sets the label and the second specifies the corresponding shape or color, as
+seen in \FigRef{fig4}. The info parameters do not affect the graph drawing
+itself so you can add one even if you do not use that particular item in the
+current presentation.
+
+\begin{figure}[ht]
+\begin{pspicture}(0, 0)(\textwidth, 9.5)
+  \rput[lb](1.0, -0.5){\epsfbox{figure4.eps}}
+  %\psframe(0, 0)(\textwidth, 9.5)
+\end{pspicture}
+\caption{A customized version of the component in \FigRef{fig1} and the
+  respective legend.}
+\label{fig4}
+\end{figure}
+
+\Section{Layout reconstruction}
+Previously, the discussion was focused on the file formats and visual outlook
+of the drawings but an equally important issue is the quality of the vertex
+positioning. Himmeli employs a force-directed algorithm that assigns repulsive
+and attractive forces between vertices based on their mutual distances and
+connections. By simulating this artificial system of strings, Himmeli searches
+for a minimum energy state that hopefully has as few edge crossing and node
+overlaps as possible.
+
+Positioning the vertices by simulation makes it difficult to determine when
+the graph has settled to an optimal configuration. The limiting factor in this
+process is time, since the rate at which large graphs converge to an
+acceptable layout is slow and the simulation itself is computationally heavy.
+For this reason, you can instruct Himmeli to stop after a fixed time quota by
+invoking the \texttt{TimeLimit} parameter.
+
+Suppose you have a very large graph and are uncertain about the time it takes
+to produce an acceptable vertex layout. Most likely, you will not even know
+what that layout would look like. It is therefore important that you can
+continue a simulation if you think that the time quota was too short. In
+effect, this means that you want to pass the coordinates of the previous
+simulation run to the next so that Himmeli does not have to start from
+scratch on each occasion.
+
+\SubSection{Auxiliary input files}
+By this time you have probably noticed that, in addition to the PS-file,
+Himmeli creates three text files that can be used to quickly reconstruct
+the layout. The accepted edges are stored to a new edge file, named according
+to \texttt{GraphName}. The file contains edge colors, widths and labels, as
+they appear in the figures. Similarly, the new vertex file has columns for the
+visual variables, but it also contains the node coordinates, degrees and
+strengths. The third text file is a new configuration file that instructs
+Himmeli to use the auxiliary edge and vertex files to import a node layout
+and visualize it accordingly.
+
+To ensure that the graph topology remains unaffected, the
+updated version of the configuration file conserves some of the original
+instructions, but overrides those pertaining to visual cues and simulation
+time. By setting a positive \texttt{TimeLimit}, you can start a new
+simulation run that starts from the stored node layout. You can also use the
+auxiliary files as a template for customization, note particularly the way
+each variable can be fetched from a separate file if necessary.
+
+Sometimes it is necessary to alter the visual outlook but to keep the
+positions. For instance, if you wish to display the evolution of connections
+as a series of figures, it is essential that the vertices do not move between
+consecutive frames. Based on the previous discussion, this can be achieved by
+first exporting the node coordinates from a network that represents the entire
+series and then using this layout in every frame. By keeping the time quota at
+zero, Himmeli will not update the initial positions and therefore only the
+visual outlook of the edges and vertices is changed. Note, however, that if
+some of the coordinates are missing, Himmeli will use arbitrary values in
+their place.
+
+\Section{Normalization and thresholding}
+Usually, the weights of a graph are not constrained. The node-positioning
+algorithm, however, works best if the edge weights are not much greater than
+one and not very close to zero (non-positive weights are not accepted).
+To tackle the problem, Himmeli has automatic normalization procedures that
+map the edge weights to the desired value range. There are altogether four
+options: you can set \texttt{EdgeWeightTransform} to fully automatic, linear
+or logarithmic scaling, or rank-based transformation. 
+
+\begin{figure}[h]
+\begin{pspicture}(0, 0)(\textwidth, 9)
+  \rput[lb](2.0, -1){\scalebox{0.8}{\epsfbox{figure7.eps}}}
+  %\psframe(0, 0)(\textwidth, 9)
+\end{pspicture}
+\caption{The component in \FigRef{fig1} after thresholding by the median
+  weight of the random graph. Only those edges with a weight above the median
+  are drawn.}
+\label{fig7}
+\end{figure}
+
+\begin{figure}[h]
+\begin{pspicture}(0, 0)(\textwidth, 9)
+  \rput[lb](2.0, -1){\scalebox{0.8}{\epsfbox{figure6.eps}}}
+  %\psframe(0, 0)(\textwidth, 9)
+\end{pspicture}
+\caption{The component in \FigRef{fig1} after thresholding by the median
+  weight of the random graph. Only those edges with a weight below the median
+  are drawn.}
+\label{fig6}
+\end{figure}
+
+Another typical need for a researcher is the thresholding of edge weights,
+that is, you either want to exclude or not draw some of the edges according
+to a constraint. For the former, you can use \texttt{EdgeWeightFilter} and to
+remove edges from the visualization step only -- they are used when
+positioning the nodes -- try the \texttt{EdgeWeightMask} instruction. Both
+features have options that let you threshold by weight quantile or absolute
+value (\FigRef{fig6} and \FigRef{fig7}).
+
+\Section{Configuration interface}
+\SubSection{File instructions}
+\begin{description}
+\item[\textnormal{\texttt{EdgeFile}}] \quad (required) \\
+  Edge data file.
+\item[\textnormal{\texttt{GraphName}}] \quad \\
+  Base name for output files. The template is \\
+  \textit{<base>\_<index>.eps} for graph components
+  and \textit{<base>.<type>.txt} for the reconstruction files.
+\item[\textnormal{\texttt{VertexFile}}] \quad \\
+  Vertex data file. You do not have to supply data for every vertex. Only
+  those vertices that are also present in the edge file will be recognized.
+\end{description}
+
+\SubSection{Structural instructions}
+\begin{description}
+\item[\textnormal{\texttt{EdgeHeadVariable}}] \quad (required) \\
+  The column of head vertices in the edge or other file. 
+\item[\textnormal{\texttt{EdgeLabelVariable}}] \quad \\
+  The column of custom edge labels.
+\item[\textnormal{\texttt{EdgeTailVariable}}] \quad (required) \\
+  The column of tail vertices in the edge or other file. 
+\item[\textnormal{\texttt{EdgeWeightFilter}}] \quad \\
+  To threshold edges by weight before node positioning, three values must
+  be supplied: the type of filter (\texttt{abs/frac}) and two limits.
+  For example, to include only the largest 10\% edge fraction in the edge
+  file, type \texttt{EdgeWeightFilter  frac  0.9  1.0}.
+\item[\textnormal{\texttt{EdgeWeightMask}}] \quad \\
+  Same as \texttt{EdgeWeightFilter} except that edges are not excluded until
+  after node positioning.
+\item[\textnormal{\texttt{EdgeWeightTransform}}] \quad \\
+  Transform edge weights to optimal range for node positioning. There are
+  three types of transformations: linear scaling (\texttt{lin}), logarithmic
+  scaling (\texttt{log}) and rank-based normalization (\texttt{rank}).
+  In addition, \texttt{auto} is a combination of the three and \texttt{off}
+  uses raw weights. The default is \texttt{auto}. 
+\item[\textnormal{\texttt{EdgeWeightVariable}}] \quad \\
+  The column of numerical edge weights. Only positive values are accepted.
+  If a weight variable is not supplied, each edge is given a uniform weight.
+\item[\textnormal{\texttt{VertexNameVariable}}] \quad \\
+  The column in the vertex  or other file that contains the list of vertex
+  names.
+\item[\textnormal{\texttt{VertexXVariable}}] \quad \\
+  The column of horizontal positions in the vertex  or other file. The scale
+  is normalized so that vertices should be at least a unit distance apart.
+\item[\textnormal{\texttt{VertexYVariable}}] \quad \\
+  The column of vertical positions in the vertex  or other file. The scale is
+  normalized so that vertices should be at least a unit distance apart.
+%\item[\textnormal{\texttt{VertexZVariable}}] \quad \\
+%  The column of depth coordinates in the vertex file. The scale is normalized
+%  so that vertices should be at least a unit distance apart.
+\end{description}
+
+\SubSection{Visualization instructions}
+\begin{description}
+\item[\textnormal{\texttt{EdgeColorVariable}}] \quad \\
+  The column of color definitions in the edge file. Colors are determined by
+  integer codes: 000000 for black, 505050 for gray, 999999 for white,
+  990000 for red, 009900 for green, 000099 for blue, or any
+  other between 000000 and 999999. 
+\item[\textnormal{\texttt{EdgeColorInfo}}] \quad (multiple) \\
+  Labels of specific edge colors to be depicted in the legend. Two value
+  fields: label and code. Valid codes within $[000000, 999999]$.
+\item[\textnormal{\texttt{EdgeWidthVariable}}] \quad \\
+  The column of edge width multipliers. Non-negative values greater than 2 or
+  smaller than 0.2 are truncated to the limits. A negative value will make
+  the edge invisible. 
+\item[\textnormal{\texttt{VertexColorInfo}}] \quad (multiple) \\
+  Labels for specific vertex colors. See \texttt{EdgeColorInfo}. 
+\item[\textnormal{\texttt{VertexColorVariable}}] \quad \\
+  The color definitions in the vertex file, see \texttt{EdgeColorVariable}
+  for usage. 
+\item[\textnormal{\texttt{VertexLabelVariable}}] \quad \\
+  The column that contains new name labels in the vertex file. The new names
+  will be used only in the figure, they will not be used to identify
+  vertices. 
+\item[\textnormal{\texttt{VertexPatternInfo}}] \quad (multiple) \\
+  Labels for specific patterns. Two value fields: code and label. Valid
+  codes within $[1, 99]$, see \FigRef{fig5}.
+\item[\textnormal{\texttt{VertexPatternVariable}}] \quad \\
+  Individual patterns. Valid codes within $[1, 99]$, see \FigRef{fig5}.
+\item[\textnormal{\texttt{VertexShapeInfo}}] \quad (multiple) \\
+  Labels for specific vertex shapes. Usage is similar to
+  \texttt{VertexPatternInfo}.
+\item[\textnormal{\texttt{VertexShapeVariable}}] \quad \\
+  The column of shape definitions in the vertex file. Shapes are determined
+  by integer codes, see \FigRef{fig5} for details.
+\item[\textnormal{\texttt{VertexSizeVariable}}] \quad \\
+  Size multiplier for vertices.
+\end{description}
+
+\SubSection{Formatting and functional instructions}
+\begin{description}
+%\item[\textnormal{\texttt{3DMode}}] \quad \\
+%  If set to \texttt{on}, the graph will be drawn as a stereo image. 
+%  The default is \texttt{off}.
+\item[\textnormal{\texttt{ArrowMode}}] \quad \\
+  If set to \texttt{on}, each edge will be augmented with an arrow head.
+  The default is \texttt{off}. 
+\item[\textnormal{\texttt{BackgroundColor}}] \quad \\
+  Canvas background color, see \texttt{EdgeColorVariable} on representing
+  the three rgb components. The default is 999999 (white).
+\item[\textnormal{\texttt{DecorationMode}}] \quad \\
+  If set to \texttt{on}, Himmeli will decorate the graph based on edge weights
+  and vertex strengths. The color palette cycles from yellow (low weight or
+  strength) through green and blue to bright red (high weight or strength).
+  The default is \texttt{off}.
+\item[\textnormal{\texttt{Delimiter}}] \quad \\
+  The character that separates the columns in the edge and vertex files. Use
+  \texttt{tab} for the horizontal tabulator and \texttt{ws} for white space.
+  The default is \texttt{tab}. 
+\item[\textnormal{\texttt{DistanceUnit}}] \quad \\
+  Set the standard distance between nodes on the canvas. This is not a zoom;
+  it scales the coordinate system that is used when drawing the figures in
+  such a way that the node symbols are not modified, only their mutual
+  distances are changed. The default is 1.
+\item[\textnormal{\texttt{FigureLimit}}] \quad \\
+  The maximum allowed number of EPS image output files. Cannot be more than
+  9999, default is 0.
+\item[\textnormal{\texttt{FontSize}}] \quad \\
+  Set the font size for vertex labels. This has no effect on the legend.
+  The default is 10pt.
+\item[\textnormal{\texttt{ForegroundColor}}] \quad \\
+  Line color for contours and text, see \texttt{EdgeColorVariable} on
+  representing the three rgb components. The default is 000000 (black).
+\item[\textnormal{\texttt{IncrementMode}}] \quad \\
+  If set to \texttt{on}, Himmeli will start simulating from the layout that
+  is supplied in the vertex file. The default is \texttt{off}. 
+\item[\textnormal{\texttt{LabelMode}}] \quad \\
+  If set to \texttt{vertex}, the drawing is augmented with vertex names or
+  user supplied labels. If set to \texttt{edge}, edge weights (or labels) are
+  written on edge center points. If set to \texttt{on}, both previous
+  options apply. The default is \texttt{vertex}.
+\item[\textnormal{\texttt{LegendMode}}] \quad \\
+  If set to \texttt{on} and there is visualization information available,
+  a legend is drawn on each page on the main output file. The default is
+  \texttt{off}. 
+\item[\textnormal{\texttt{PageOrientation}}] \quad \\
+  Figure orientation, can be \texttt{landscape} (default) or
+  \texttt{portrait}.
+\item[\textnormal{\texttt{PageSize}}] \quad \\
+  Keyword for page sizes for the output documents. Possible choices are
+  'letter', and 'a0' to 'a5' for the first value (main document). The second
+  value refers to the component outputs (.eps files) with an additional option
+  of automatic size 'auto'. The defaults are 'letter' and 'auto' for the
+  first and second value, respectively.
+\item[\textnormal{\texttt{TimeLimit}}] \quad \\
+  The time quota in seconds for computing the node positions. If set to
+  zero, no simulation is performed. The default is 10s. 
+\item[\textnormal{\texttt{TreeMode}}] \quad \\
+  If set to \texttt{on}, Himmeli will use only the maximum spanning tree
+  instead of the full graph. The default is \texttt{off}.
+\item[\textnormal{\texttt{VerboseMode}}] \quad \\
+  If set to \texttt{on}, Himmeli will print all runtime messages. The
+  default is \texttt{on}.
+\end{description}
+\end{document}
